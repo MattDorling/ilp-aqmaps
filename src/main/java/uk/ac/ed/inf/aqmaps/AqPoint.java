@@ -10,4 +10,7 @@ public class AqPoint {
         this.battery = battery;
         this.reading = reading;
     }
+    public String getW3W() {
+        return location;
+    }
 }

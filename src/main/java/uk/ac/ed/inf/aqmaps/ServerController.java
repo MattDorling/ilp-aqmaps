@@ -10,7 +10,7 @@ import java.util.List;
 import com.mapbox.geojson.*;
 import java.lang.reflect.Type;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
 
@@ -36,12 +36,25 @@ public class ServerController {
     
     public List<AqPoint> getAqData(MyDate d) {
         String locator = "/maps/" + Integer.toString(d.getYear())
-        + "/" + Integer.toString(d.getMonth()) 
-        + "/" + Integer.toString(d.getDay()) 
+        + "/" + String.format("%02d", d.getMonth()) 
+        + "/" + String.format("%02d", d.getDay()) 
         + "/air-quality-data.json";
         String json =  getJson(locator);
         Type listType = new TypeToken<ArrayList<AqPoint>>() {}.getType();
         return new Gson().fromJson(json, listType);
+        
+    }
+    
+    public Coordinate getCoordinates(String w3w) {
+        String[] word = w3w.split("\\.");
+        String locator = "/words/" + word[0] + "/" + word[1] + "/" + word[2] + "/details.json";
+        String json =  getJson(locator);
+        JsonElement rootNode = JsonParser.parseString(json);
+        JsonObject details = rootNode.getAsJsonObject();
+        JsonObject coord = details.getAsJsonObject("coordinates");
+        JsonElement lng = coord.get("lng");
+        JsonElement lat = coord.get("lat");
+        return new Coordinate(lat.getAsDouble(), lng.getAsDouble());
     }
     
     public FeatureCollection getNoFlyZones() {
