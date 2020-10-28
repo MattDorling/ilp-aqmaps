@@ -1,12 +1,12 @@
 package uk.ac.ed.inf.aqmaps;
 
-public class Node extends Coordinate{
+public class SensorNode extends Coordinate{
     private int index;
     public int getIndex() {
         return index;
     }
 
-    public Node(int index, Coordinate coordinates) {
+    public SensorNode(int index, Coordinate coordinates) {
         super(coordinates.getLatitude(), coordinates.getLongitude());
         this.index = index;
     }

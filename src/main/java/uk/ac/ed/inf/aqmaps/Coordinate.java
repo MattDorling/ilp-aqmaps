@@ -33,18 +33,12 @@ public class Coordinate {
     public double angleTo(Coordinate c) {
         var x = - this.getLongitude() + c.getLongitude();
         var y = - this.getLatitude() + c.getLatitude();
-        var angle = Math.toDegrees(Math.atan(y/x));
-//        if (x > 0 && y <0) { angle += 90; }
-//        else if (x < 0 && y < 0) { angle += 180; }
-//        else if (x < 0 && y > 0) { angle += 270; }
-        return angle;
+        return Math.toDegrees(Math.atan2(x,y));
     }
-    
-    public boolean inRange(Coordinate c) {
-        return this.getDist(c) <= 0.0002;
-    }
+
     
     public Coordinate findFrom(double angle, double distance) {
+        angle = Math.toRadians(angle);
         double newy = this.getLatitude() + Math.cos(angle) * distance;
         double newx = this.getLongitude() + Math.sin(angle) * distance;
         return new Coordinate(newy, newx);
