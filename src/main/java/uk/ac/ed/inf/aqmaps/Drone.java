@@ -27,10 +27,10 @@ public class Drone {
     }
     
     public void travelRoute() {
+        // TODO print unvisited nodes
         var fpFile = new FlightPathFile(date);
-              
-        
-//        # TODO program drone to visit each point in route, collecting sensor data
+        var rFile = new ReadingsFile(date);
+        rFile.stage(this.route.toArray(new Coordinate[0]));
         SensorConnector sensors = new SensorConnector(this.server);
         for (int i = 0; i < this.route.size() - 1; i++) {
             AqPoint aqSensor = sensors.readSensor(this.route.get(i));
@@ -46,12 +46,13 @@ public class Drone {
                     );
             
             if (aqSensor != null) {
-                // TODO write geojson file
+                rFile.stage(aqSensor, server.getCoordinates(aqSensor.getW3W()));
                 fpLine += aqSensor.getW3W();
             } else {
                 fpLine += "null"; // TODO am i printing null here??
             }
             fpFile.append(fpLine + "\n");
         }
+        rFile.write();
     }
 }

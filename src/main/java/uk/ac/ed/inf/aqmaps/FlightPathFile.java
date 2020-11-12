@@ -11,12 +11,8 @@ public class FlightPathFile {
     
     public FlightPathFile(MyDate date) {
         boolean bool = false;
-        try {
-            String dStr = date.toString();
-//            String fn = "readings-" + dStr + ".geojson";
-//            this.file = new File(fn);
-            
-            this.file = new File("flightpath-" + dStr + ".txt");
+        try {    
+            this.file = new File("flightpath-" + date.toString() + ".txt");
             if (this.file.exists()) {
             this.file.delete();
             }
