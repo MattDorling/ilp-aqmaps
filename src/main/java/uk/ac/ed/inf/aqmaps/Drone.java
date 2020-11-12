@@ -9,10 +9,12 @@ public class Drone {
     private final Map map;
     private LinkedList<Coordinate> route;
     private final ServerController server;
-    private Coordinate position;
+    private final MyDate date;
     
-    public Drone(Map m, ServerController sc, Coordinate start) {
-        var points = m.getAqpoints();
+    public Drone(ServerController sc, Coordinate start, MyDate date) {
+        this.map = new Map(sc);
+        this.date = date;
+        var points = this.map.getAqpoints();
         var coords = new ArrayList<Coordinate>();
         int i = 0;
         for (AqPoint p : points) {
@@ -20,13 +22,36 @@ public class Drone {
             i++;
         }
         this.nav = new Navigator(coords, sc, start);
-        this.map = m;
         this.server = sc;
         this.route = nav.nnAlgorithm(); // TODO change this to a better name like loadRoute()
-        this.position = start;
     }
     
     public void travelRoute() {
+        var fpFile = new FlightPathFile(date);
+              
+        
 //        # TODO program drone to visit each point in route, collecting sensor data
+        SensorConnector sensors = new SensorConnector(this.server);
+        for (int i = 0; i < this.route.size() - 1; i++) {
+            AqPoint aqSensor = sensors.readSensor(this.route.get(i));
+            Coordinate from = this.route.get(i);
+            Coordinate to = this.route.get(i+1);
+            String fpLine = String.format("%d,%f,%f,%d,%f,%f,", 
+                    i+1,
+                    from.getLongitude(),
+                    from.getLatitude(),
+                    Math.round((float) from.angleTo(to)),
+                    to.getLongitude(),
+                    to.getLatitude()
+                    );
+            
+            if (aqSensor != null) {
+                // TODO write geojson file
+                fpLine += aqSensor.getW3W();
+            } else {
+                fpLine += "null"; // TODO am i printing null here??
+            }
+            fpFile.append(fpLine + "\n");
+        }
     }
 }

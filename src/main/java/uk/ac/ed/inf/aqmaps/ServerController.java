@@ -17,9 +17,11 @@ import com.google.gson.reflect.TypeToken;
 public class ServerController {
     // Create HttpClient with default settings
     private final HttpClient httpClient = HttpClient.newHttpClient();
-    private String address;
-    public ServerController(int port) {
-        address = "http://localhost:" + Integer.toString(port);
+    private final String address;
+    private final MyDate date;
+    public ServerController(int port, MyDate date) {
+        this.address = "http://localhost:" + Integer.toString(port);
+        this.date = date;
     }
     public String getLocationDetails(String word1, String word2, String word3) {
         String locator = "/words/" + word1 + "/" + word2 + "/" + word3 + "/details.json";
@@ -34,10 +36,10 @@ public class ServerController {
         return out; 
     }
     
-    public List<AqPoint> getAqData(MyDate d) {
-        String locator = "/maps/" + Integer.toString(d.getYear())
-        + "/" + String.format("%02d", d.getMonth()) 
-        + "/" + String.format("%02d", d.getDay()) 
+    public List<AqPoint> getAqData() {
+        String locator = "/maps/" + Integer.toString(this.date.getYear())
+        + "/" + String.format("%02d", this.date.getMonth()) 
+        + "/" + String.format("%02d", this.date.getDay()) 
         + "/air-quality-data.json";
         String json =  getJson(locator);
         Type listType = new TypeToken<ArrayList<AqPoint>>() {}.getType();

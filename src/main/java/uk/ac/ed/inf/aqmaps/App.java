@@ -19,9 +19,9 @@ public class App
         int seed = Integer.parseInt(args[5]);
         int port = Integer.parseInt(args[6]);
 
-        ServerController s = new ServerController(port);
-        Map m = new Map(s, date);
-        Drone d = new Drone(m, s, start);
+        ServerController sc = new ServerController(port, date);
+        
+        Drone d = new Drone(sc, start, date);
         d.travelRoute();
     }
 }
