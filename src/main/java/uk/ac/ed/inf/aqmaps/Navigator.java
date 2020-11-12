@@ -3,32 +3,23 @@ package uk.ac.ed.inf.aqmaps;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 
 public class Navigator {
     private Graph graph;
-    private Map map;
     private Coordinate start;
     private static final double MOVE_SIZE = 0.0003;
 
-    public Navigator(Map m, ServerController sc, Coordinate start) {
-        var points = m.getAqpoints();
+    public Navigator(List<Coordinate> coordinates, ServerController sc, Coordinate start) {
         this.start = start;
-        this.map = m;
-        this.graph = new Graph();
-        Coordinate c;
-        int i = 0;
-        for (AqPoint p : points) {
-            graph.addNode(new SensorNode(i, sc.getCoordinates(p.getW3W())));
-            i++;
+        this.graph = new Graph(coordinates);
         }
-    }
 
-    public void nnAlgorithm() {
+    public LinkedList<Coordinate> nnAlgorithm() {
         var unvisited = new HashSet<Integer>();
         var nodePath = new LinkedList<>();
         var path = new LinkedList<Coordinate>();
-        var path2append = new LinkedList<Coordinate>();
-
+        LinkedList<Coordinate> path2append;
         for (int i = 0; i < graph.nodeCount() - 1; i++) {
             unvisited.add(i);
         }
@@ -44,9 +35,7 @@ public class Navigator {
 
             path2append = randomlyPath(dronePos, new Target(targetNode));
             path2append.removeFirst();
-            for (Coordinate c : path2append) {
-                System.out.println("[" + c.getLongitude() + "," + c.getLatitude() + "],");
-            }
+
             path.addAll(path2append);
 
             unvisited.remove(targetIndex);
@@ -56,7 +45,12 @@ public class Navigator {
         path2append = randomlyPath(dronePos, new Target(this.start));
         path2append.removeFirst();
         path.addAll(path2append);
-        System.out.println(nodePath);
+        
+        for (Coordinate c : path) {
+            System.out.println("[" + c.getLongitude() + "," + c.getLatitude() + "],");
+        }
+        
+        return path;
     }
 
     private int nearestNode(HashSet<Integer> indices, Coordinate startNode) {

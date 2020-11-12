@@ -21,7 +21,7 @@ public class App
 
         ServerController s = new ServerController(port);
         Map m = new Map(s, date);
-        Navigator n = new Navigator(m, s, start);
-        n.nnAlgorithm();
+        Drone d = new Drone(m, s, start);
+        d.travelRoute();
     }
 }
