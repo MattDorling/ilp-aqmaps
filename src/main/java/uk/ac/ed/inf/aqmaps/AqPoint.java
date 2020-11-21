@@ -13,4 +13,10 @@ public class AqPoint {
     public String getW3W() {
         return location;
     }
+    public boolean lowBattery() {
+        return this.battery < 10.0;
+    }
+    public double getReading() {
+        return Double.parseDouble(reading);
+    }
 }

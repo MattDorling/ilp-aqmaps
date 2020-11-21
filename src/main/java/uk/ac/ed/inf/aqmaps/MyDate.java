@@ -20,4 +20,7 @@ public class MyDate {
     public int getYear() {
         return year;
     }
+    public String toString() {
+        return String.format("%02d-%02d-%d", day, month, year);
+    }
 }
