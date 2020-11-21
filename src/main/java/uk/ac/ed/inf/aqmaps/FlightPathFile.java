@@ -22,7 +22,7 @@ public class FlightPathFile {
         }
     }
 
-    public void append(String line) {
+    private void append(String line) {
         try (
             BufferedWriter bw = new BufferedWriter(
                     new FileWriter(file,true)) 
@@ -31,5 +31,17 @@ public class FlightPathFile {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public void append(int i, Coordinate from, double angle, Coordinate to, String w3w) {
+        String fpLine = String.format("%d,%f,%f,%d,%f,%f,%s",
+                i+1,
+                from.getLongitude(),
+                from.getLatitude(),
+                Math.round((float) from.angleTo(to)),
+                to.getLongitude(),
+                to.getLatitude(),
+                w3w
+                );
+        this.append(fpLine + "\n");
     }
 }

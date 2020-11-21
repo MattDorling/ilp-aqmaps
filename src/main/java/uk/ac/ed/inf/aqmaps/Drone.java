@@ -27,7 +27,6 @@ public class Drone {
     }
     
     public void travelRoute() {
-        // TODO print unvisited nodes
         var fpFile = new FlightPathFile(date);
         var rFile = new ReadingsFile(date);
         rFile.stage(this.route.toArray(new Coordinate[0]));
@@ -36,22 +35,12 @@ public class Drone {
             AqPoint aqSensor = sensors.readSensor(this.route.get(i));
             Coordinate from = this.route.get(i);
             Coordinate to = this.route.get(i+1);
-            String fpLine = String.format("%d,%f,%f,%d,%f,%f,", 
-                    i+1,
-                    from.getLongitude(),
-                    from.getLatitude(),
-                    Math.round((float) from.angleTo(to)),
-                    to.getLongitude(),
-                    to.getLatitude()
-                    );
-            
+            String w3w = "null";
             if (aqSensor != null) {
                 rFile.stage(aqSensor, server.getCoordinates(aqSensor.getW3W()));
-                fpLine += aqSensor.getW3W();
-            } else {
-                fpLine += "null"; // TODO am i printing null here??
+                w3w = aqSensor.getW3W();
             }
-            fpFile.append(fpLine + "\n");
+            fpFile.append(i, from, from.angleTo(to), to, w3w);
         }
         rFile.write();
     }
