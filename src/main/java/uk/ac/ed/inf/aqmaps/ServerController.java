@@ -8,6 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mapbox.geojson.*;
+
+import java.awt.Shape;
+import java.awt.geom.Path2D;
+import java.awt.geom.Path2D.Double;
 import java.lang.reflect.Type;
 
 import com.google.gson.*;
@@ -59,10 +63,40 @@ public class ServerController {
         return new Coordinate(lat.getAsDouble(), lng.getAsDouble());
     }
     
-    public FeatureCollection getNoFlyZones() {
+    public List<Building> getNoFlyZones() {
+        var buildings = new ArrayList<Building>();
         String locator = "/buildings/no-fly-zones.geojson";
-        return FeatureCollection.fromJson(getJson(locator));
+        var fc =  FeatureCollection.fromJson(getJson(locator));
+        var features = fc.features();
+        for (Feature f : features) {
+            var coords = new ArrayList<Coordinate>();
+            Polygon poly = (Polygon) f.geometry();
+            List<Point> points = poly.coordinates().get(0);
+            for (Point point : points) {
+                coords.add(new Coordinate(point.latitude(), point.longitude()));
+            }
+            buildings.add(new Building(coords));
+        }
+        return buildings;
     }
+//    public List<Object> getNoFlyZones() {
+//        var buildings = new ArrayList<>();
+//        String locator = "/buildings/no-fly-zones.geojson";
+//        var fc =  FeatureCollection.fromJson(getJson(locator));
+//        var features = fc.features();
+//        for (Feature f : features) {
+//            Polygon poly = (Polygon) f.geometry();
+//            List<Point> points = poly.coordinates().get(0);
+//            Path2D path = new Path2D.Double();
+//            path.moveTo(points.get(0).latitude(), points.get(1).longitude());
+//            for (int i = 1; i < points.size(); i++) {
+//                path.lineTo(points.get(i).latitude(), points.get(i).longitude());
+//            }
+//            buildings.add(path);
+//        }
+//        return buildings;
+//    }
+
     
     private String getJson(String locator) {
         var request = HttpRequest.newBuilder()

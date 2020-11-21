@@ -8,11 +8,13 @@ import java.util.List;
 public class Navigator {
     private Graph graph;
     private Coordinate start;
+    private Map map;
     private static final double MOVE_SIZE = 0.0003;
 
-    public Navigator(List<Coordinate> coordinates, ServerController sc, Coordinate start) {
+    public Navigator(List<Coordinate> coordinates, Map map, Coordinate start) {
         this.start = start;
         this.graph = new Graph(coordinates);
+        this.map = map;
         }
 
     public LinkedList<Coordinate> nnAlgorithm() {
@@ -81,16 +83,28 @@ public class Navigator {
             do {
                 ranAng = Math.round((Math.random() - 0.5) * 2)*10;
                 ang = Math.round(path.getLast().angleTo(tar)/10.0)*10 + ranAng;
+                ang = this.nonCollidingAngle(path.getLast(), ang);
                 if (ang - prevAng > 90) {
                     backStep = true;
                 }
-                c = path.getLast().findFrom(ang , MOVE_SIZE);
+                c = path.getLast().findFrom(ang, MOVE_SIZE);
                 path.add(c);
                 prevAng = ang;
                 hitTar = tar.isHit(c);
             } while (!hitTar && !backStep);
-        } while (backStep | path.size() > 20);
+        } while (backStep || path.size() > 20);
         return path;
+    }
+    
+    private double nonCollidingAngle(Coordinate from, double angle) {
+        for (int i = 0; i < 18; i++) {
+            if (i > 0) {angle += 10*((-1)^i);}
+            var testCoordinate = from.findFrom(angle, MOVE_SIZE);
+            if (!this.map.collides(from, testCoordinate)) {
+                break;
+            }
+        }
+        return angle;
     }
 
 //    private LinkedList<Coordinate> calculatePath(Coordinate start, Coordinate target) {

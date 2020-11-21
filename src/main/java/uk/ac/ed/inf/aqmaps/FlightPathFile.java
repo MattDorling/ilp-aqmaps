@@ -14,7 +14,7 @@ public class FlightPathFile {
         try {    
             this.file = new File("flightpath-" + date.toString() + ".txt");
             if (this.file.exists()) {
-            this.file.delete();
+                this.file.delete();
             }
             this.file.createNewFile();
         } catch (IOException e) {

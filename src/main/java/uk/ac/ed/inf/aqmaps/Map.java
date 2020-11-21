@@ -1,12 +1,12 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.awt.geom.Path2D;
 import java.util.List;
 
-import com.mapbox.geojson.*;
 
 public class Map{
     private List<AqPoint> aqpoints;
-    private FeatureCollection noflyzones;
+    private List<Building> noflyzones;
     
     public Map(ServerController s) {
         this.aqpoints = s.getAqData();
@@ -16,4 +16,14 @@ public class Map{
     public List<AqPoint> getAqpoints() {
         return aqpoints;
     }
+   
+    public boolean collides(Coordinate c1, Coordinate c2) {
+        for (Building b : this.noflyzones) {
+            if (b.collides(c1, c2)){
+                return true;
+            }
+        }
+        return false;
+    }
+    
 }

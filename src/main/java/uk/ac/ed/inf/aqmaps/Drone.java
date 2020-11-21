@@ -21,7 +21,7 @@ public class Drone {
             coords.add(sc.getCoordinates(p.getW3W()));
             i++;
         }
-        this.nav = new Navigator(coords, sc, start);
+        this.nav = new Navigator(coords, this.map, start);
         this.server = sc;
         this.route = nav.nnAlgorithm(); // TODO change this to a better name like loadRoute()
     }
