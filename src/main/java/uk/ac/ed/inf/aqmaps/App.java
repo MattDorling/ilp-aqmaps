@@ -23,5 +23,6 @@ public class App
         
         Drone d = new Drone(sc, start, date);
         d.travelRoute();
+        System.out.println("Complete");
     }
 }

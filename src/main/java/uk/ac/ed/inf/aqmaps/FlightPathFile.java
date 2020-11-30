@@ -33,11 +33,15 @@ public class FlightPathFile {
         }
     }
     public void append(int i, Coordinate from, double angle, Coordinate to, String w3w) {
+        int ang = (int) Math.round(angle);
+        if (ang < 0) {
+            ang += 360;
+        }
         String fpLine = String.format("%d,%f,%f,%d,%f,%f,%s",
                 i+1,
                 from.getLongitude(),
                 from.getLatitude(),
-                Math.round((float) from.angleTo(to)),
+                ang,
                 to.getLongitude(),
                 to.getLatitude(),
                 w3w

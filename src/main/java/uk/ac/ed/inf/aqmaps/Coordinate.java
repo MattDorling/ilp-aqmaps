@@ -30,10 +30,10 @@ public class Coordinate {
         return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
     }
     
-    public double angleTo(Coordinate c) {
+    public float angleTo(Coordinate c) {
         var x = - this.getLongitude() + c.getLongitude();
         var y = - this.getLatitude() + c.getLatitude();
-        return Math.toDegrees(Math.atan2(x,y));
+        return (float) Math.toDegrees(Math.atan2(x,y));
     }
 
     
