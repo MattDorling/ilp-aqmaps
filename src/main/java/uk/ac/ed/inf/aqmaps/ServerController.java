@@ -3,15 +3,14 @@ package uk.ac.ed.inf.aqmaps;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.*;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mapbox.geojson.*;
 
-import java.awt.Shape;
-import java.awt.geom.Path2D;
-import java.awt.geom.Path2D.Double;
+import java.io.IOException;
 import java.lang.reflect.Type;
 
 import com.google.gson.*;
@@ -38,6 +37,22 @@ public class ServerController {
             out = response.body();
         }catch(Exception e) {System.out.println(e);}
         return out; 
+    }
+    
+    public boolean checkExists(){
+        String locator = "/maps/" + Integer.toString(this.date.getYear())
+        + "/" + String.format("%02d", this.date.getMonth()) 
+        + "/" + String.format("%02d", this.date.getDay()) 
+        + "/air-quality-data.json";
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(this.address+locator))
+                .build();
+        HttpResponse<Void> response;
+        try {
+            response = httpClient.send(request, BodyHandlers.discarding());
+            return (response.statusCode()!=404);
+        }catch(Exception e) {System.out.println(e);}
+        return false;
     }
     
     public List<AqPoint> getAqData() {
@@ -79,24 +94,6 @@ public class ServerController {
         }
         return buildings;
     }
-//    public List<Object> getNoFlyZones() {
-//        var buildings = new ArrayList<>();
-//        String locator = "/buildings/no-fly-zones.geojson";
-//        var fc =  FeatureCollection.fromJson(getJson(locator));
-//        var features = fc.features();
-//        for (Feature f : features) {
-//            Polygon poly = (Polygon) f.geometry();
-//            List<Point> points = poly.coordinates().get(0);
-//            Path2D path = new Path2D.Double();
-//            path.moveTo(points.get(0).latitude(), points.get(1).longitude());
-//            for (int i = 1; i < points.size(); i++) {
-//                path.lineTo(points.get(i).latitude(), points.get(i).longitude());
-//            }
-//            buildings.add(path);
-//        }
-//        return buildings;
-//    }
-
     
     private String getJson(String locator) {
         var request = HttpRequest.newBuilder()

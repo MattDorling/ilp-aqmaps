@@ -18,11 +18,15 @@ public class App
         
         int seed = Integer.parseInt(args[5]);
         int port = Integer.parseInt(args[6]);
-
-        ServerController sc = new ServerController(port, date);
         
-        Drone d = new Drone(sc, start, date);
-        d.travelRoute();
-        System.out.println("Complete");
+        ServerController sc = new ServerController(port, date);
+        if (sc.checkExists()) {
+            Drone d = new Drone(sc, start, date);
+            d.travelRoute();
+            System.out.println("Complete");
+        } else {
+            System.out.println("Date does not exist on server");
+        }
+        
     }
 }

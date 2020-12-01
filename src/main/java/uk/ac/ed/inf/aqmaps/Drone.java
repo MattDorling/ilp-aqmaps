@@ -6,24 +6,26 @@ import java.util.LinkedList;
 
 public class Drone {
     private final Navigator nav;
-    private final Map map;
+//    private final Map map;
     private LinkedList<Coordinate> route;
     private final ServerController server;
     private final MyDate date;
     
     public Drone(ServerController sc, Coordinate start, MyDate date) {
-        this.map = new Map(sc);
         this.date = date;
-        var points = this.map.getAqpoints();
+        var points = sc.getAqData();
         var coords = new ArrayList<Coordinate>();
         int i = 0;
         for (AqPoint p : points) {
             coords.add(sc.getCoordinates(p.getW3W()));
             i++;
         }
-        this.nav = new Navigator(coords, this.map, start);
+        this.nav = new Navigator(coords, points, sc.getNoFlyZones(), start);
         this.server = sc;
         this.route = nav.nnAlgorithm();
+        if (this.route.size() > 150) {
+            this.route = nav.nnAlgorithm();
+        }
     }
     
     public void travelRoute() {
