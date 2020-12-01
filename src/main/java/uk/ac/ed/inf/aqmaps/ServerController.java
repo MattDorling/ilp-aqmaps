@@ -3,11 +3,14 @@ package uk.ac.ed.inf.aqmaps;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.*;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mapbox.geojson.*;
+
+import java.io.IOException;
 import java.lang.reflect.Type;
 
 import com.google.gson.*;
@@ -36,6 +39,22 @@ public class ServerController {
         return out; 
     }
     
+    public boolean checkExists(){
+        String locator = "/maps/" + Integer.toString(this.date.getYear())
+        + "/" + String.format("%02d", this.date.getMonth()) 
+        + "/" + String.format("%02d", this.date.getDay()) 
+        + "/air-quality-data.json";
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(this.address+locator))
+                .build();
+        HttpResponse<Void> response;
+        try {
+            response = httpClient.send(request, BodyHandlers.discarding());
+            return (response.statusCode()!=404);
+        }catch(Exception e) {System.out.println(e);}
+        return false;
+    }
+    
     public List<AqPoint> getAqData() {
         String locator = "/maps/" + Integer.toString(this.date.getYear())
         + "/" + String.format("%02d", this.date.getMonth()) 
@@ -59,9 +78,21 @@ public class ServerController {
         return new Coordinate(lat.getAsDouble(), lng.getAsDouble());
     }
     
-    public FeatureCollection getNoFlyZones() {
+    public List<Building> getNoFlyZones() {
+        var buildings = new ArrayList<Building>();
         String locator = "/buildings/no-fly-zones.geojson";
-        return FeatureCollection.fromJson(getJson(locator));
+        var fc =  FeatureCollection.fromJson(getJson(locator));
+        var features = fc.features();
+        for (Feature f : features) {
+            var coords = new ArrayList<Coordinate>();
+            Polygon poly = (Polygon) f.geometry();
+            List<Point> points = poly.coordinates().get(0);
+            for (Point point : points) {
+                coords.add(new Coordinate(point.latitude(), point.longitude()));
+            }
+            buildings.add(new Building(coords));
+        }
+        return buildings;
     }
     
     private String getJson(String locator) {
