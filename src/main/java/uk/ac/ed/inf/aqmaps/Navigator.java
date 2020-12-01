@@ -6,18 +6,15 @@ import java.util.List;
 
 public class Navigator {
     private static final double MOVE_SIZE = 0.0003;
-//    private Graph graph;
     private Coordinate start;
-    private List<AqPoint> AqPoints;
     private List<Building> noFlyZones;
     private List<Coordinate> nodes;
 
 
     public Navigator(List<Coordinate> coordinates, 
-            List<AqPoint> AqData, List<Building> noFlyZones, Coordinate start) {
+            List<Building> noFlyZones, Coordinate start) {
         this.start = start;
         this.nodes = coordinates;
-        this.AqPoints = AqData;
         this.noFlyZones = noFlyZones;
         }
 

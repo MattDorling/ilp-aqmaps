@@ -2,10 +2,6 @@ package uk.ac.ed.inf.aqmaps;
 
 
 
-/**
- * Hello world!
- *
- */
 public class App 
 {
     
