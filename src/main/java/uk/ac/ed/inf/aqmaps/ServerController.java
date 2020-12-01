@@ -1,5 +1,6 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -39,7 +40,7 @@ public class ServerController {
         return out; 
     }
     
-    public boolean checkExists(){
+    public String checkStatus(){
         String locator = "/maps/" + Integer.toString(this.date.getYear())
         + "/" + String.format("%02d", this.date.getMonth()) 
         + "/" + String.format("%02d", this.date.getDay()) 
@@ -48,11 +49,17 @@ public class ServerController {
                 .uri(URI.create(this.address+locator))
                 .build();
         HttpResponse<Void> response;
+        String out = "An error occured";
         try {
             response = httpClient.send(request, BodyHandlers.discarding());
-            return (response.statusCode()!=404);
+            if (response.statusCode()==404) {
+                out = "Date does not exist on server";
+            } else {
+                out = "ok";
+            }
+        }catch(ConnectException ce) { out = "Unable to connect on " +this.address;
         }catch(Exception e) {System.out.println(e);}
-        return false;
+        return out;
     }
     
     public List<AqPoint> getAqData() {

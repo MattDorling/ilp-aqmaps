@@ -22,10 +22,10 @@ public class Drone {
         }
         this.nav = new Navigator(coords, points, sc.getNoFlyZones(), start);
         this.server = sc;
-        this.route = nav.nnAlgorithm();
-        if (this.route.size() > 150) {
-            this.route = nav.nnAlgorithm();
-        }
+        this.route = nav.generateRoute();
+//        if (this.route.size() > 150) {
+//            this.route = nav.nnAlgorithm();
+//        }
     }
     
     public void travelRoute() {

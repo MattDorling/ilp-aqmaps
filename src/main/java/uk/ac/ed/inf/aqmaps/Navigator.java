@@ -21,15 +21,29 @@ public class Navigator {
         this.noFlyZones = noFlyZones;
         }
 
-    public LinkedList<Coordinate> nnAlgorithm() {
+    public LinkedList<Coordinate> generateRoute() {
+        var route = nnAlgorithm();
+        if (route.size() > 80) {
+            LinkedList<Coordinate> candidate;
+            for (int i = 0; i <=5; i++) {
+                candidate = nnAlgorithm();
+                if (candidate.size() < route.size()) {
+                    route = candidate;
+                }
+            }
+        }
+        return route;
+    }
+    
+    private LinkedList<Coordinate> nnAlgorithm() {
         var unvisited = new HashSet<Integer>();
+        
         var nodePath = new LinkedList<>();
         var path = new LinkedList<Coordinate>();
         LinkedList<Coordinate> path2append;
-        for (int i = 0; i < nodes.size() - 1; i++) {
+        for (int i = 0; i < nodes.size(); i++) {
             unvisited.add(i);
         }
-
         Coordinate dronePos = this.start;
         Coordinate targetNode;
         path.add(this.start);
@@ -79,8 +93,6 @@ public class Navigator {
             path.add(start);
         } else {
             do {
-                backStep = false;
-                hitTar = false;
                 path = new LinkedList<>();
                 path.add(start);
                 prevAng = (int) (Math.round(path.getLast().angleTo(tar)/10.0)*10);
@@ -106,7 +118,6 @@ public class Navigator {
     }
     
     private int nonCollidingAngle(Coordinate from, int angle) {
-        boolean found = false;
         for (int i = 0; i < 36; i++) {
             angle += i*10;
             var testCoordinate = from.findFrom(angle, MOVE_SIZE);
