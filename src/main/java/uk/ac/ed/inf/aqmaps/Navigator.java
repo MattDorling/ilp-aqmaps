@@ -6,16 +6,25 @@ import java.util.List;
 
 public class Navigator {
     private static final double MOVE_SIZE = 0.0003;
-    private Coordinate start;
-    private List<Building> noFlyZones;
-    private List<Coordinate> nodes;
+    private final Coordinate start;
+    private final List<Collidable> noFlyZones;
+    private final List<Coordinate> nodes;
 
 
     public Navigator(List<Coordinate> coordinates, 
-            List<Building> noFlyZones, Coordinate start) {
+            List<Collidable> noFlyZones, Coordinate start) {
         this.start = start;
         this.nodes = coordinates;
         this.noFlyZones = noFlyZones;
+        
+        var forrestHill = new Coordinate(55.946233,-3.192473);
+        var topMeadows = new Coordinate(55.942617,-3.192473);
+        var buccBusStop = new Coordinate(55.942617,-3.184319);
+        var kfc = new Coordinate(55.946233,-3.184319);
+        this.noFlyZones.add(new Boundary(forrestHill, topMeadows));
+        this.noFlyZones.add(new Boundary(topMeadows, buccBusStop));
+        this.noFlyZones.add(new Boundary(buccBusStop, kfc));
+        this.noFlyZones.add(new Boundary(kfc, forrestHill));
         }
 
     public LinkedList<Coordinate> generateRoute() {
@@ -133,7 +142,7 @@ public class Navigator {
     
     private boolean collides(Coordinate c1, Coordinate c2) {
         boolean collision = false;
-        for (Building b : this.noFlyZones) {
+        for (Collidable b : this.noFlyZones) {
             if (b.collides(c1, c2)){
                 collision = true;
             }

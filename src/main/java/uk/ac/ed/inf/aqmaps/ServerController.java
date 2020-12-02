@@ -28,26 +28,43 @@ public class ServerController {
         this.date = date;
     }
 
-    public String checkStatus(){
+    public boolean checkConnected(){
+        boolean retVal = false;
+        
+        // build a resource locator for the json file on the server
         String locator = "/maps/" + Integer.toString(this.date.getYear())
         + "/" + String.format("%02d", this.date.getMonth()) 
         + "/" + String.format("%02d", this.date.getDay()) 
         + "/air-quality-data.json";
+        
+        // make a HttpRequest
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(this.address+locator))
                 .build();
         HttpResponse<Void> response;
         String out = "An error occured";
         try {
+            // try sending the HttpRequest
             response = httpClient.send(request, BodyHandlers.discarding());
+            
+            // error 404 means that the date given does not exist on the server (like 60/02/2020)
             if (response.statusCode()==404) {
                 out = "Date does not exist on server";
-            } else {
-                out = "ok";
+            } else {    // anything else should mean the connectin to the server is ok.
+                retVal = true;
             }
+        // ConnectException usually occurs when there is no server
+        //   running on the localhost address and port.
         }catch(ConnectException ce) { out = "Unable to connect on " +this.address;
+        
+        // any other exception
         }catch(Exception e) {System.out.println(e);}
-        return out;
+        
+        // if there is a detected problem with the server, print a lightweight error message
+        if (!retVal) { System.out.println(out); }
+        
+        // return the result
+        return retVal;
     }
     
     public List<AqPoint> getAqData() {
@@ -73,8 +90,8 @@ public class ServerController {
         return new Coordinate(lat.getAsDouble(), lng.getAsDouble());
     }
     
-    public List<Building> getNoFlyZones() {
-        var buildings = new ArrayList<Building>();
+    public List<Collidable> getNoFlyZones() {
+        var buildings = new ArrayList<Collidable>();
         String locator = "/buildings/no-fly-zones.geojson";
         var fc =  FeatureCollection.fromJson(getJson(locator));
         var features = fc.features();

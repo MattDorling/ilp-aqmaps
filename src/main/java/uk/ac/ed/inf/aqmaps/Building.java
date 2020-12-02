@@ -2,43 +2,39 @@ package uk.ac.ed.inf.aqmaps;
 
 import java.util.List;
 
-public class Building {
+/**
+ * This class implements Collidable and provides an abstraction of a building - a polygon within the map
+ * with which the drone cannot collide.
+ *
+ */
+public class Building implements Collidable{
     private final List<Coordinate> coordinates;
 
+    /**Constructor for the Building class.
+     * 
+     * @param coordinates is a list of points defining the perimeter of the building.
+     */
     public Building(List<Coordinate> coordinates) {
         this.coordinates = coordinates;
+        // the building polygon is a closed loop, so add the first element to the end
         this.coordinates.add(coordinates.get(0));
     }
     
+    /**Determines whether a move from one point to another will collide with the building.
+     * @param c1 is the start point of a move.
+     * @param c2 is the end point of a move.
+     */
+    @Override
     public boolean collides(Coordinate c1, Coordinate c2) {
+        // check through each consecutive pair of coordinates of the building
         for (int i = 0; i < coordinates.size()-1; i++) {
             var p1 = coordinates.get(i);
             var p2 = coordinates.get(i+1);
-            if (intersects(p1,p2,c1,c2)) { return true;}
+            // if it intersects with any one pair, there is a collision, return true
+            if (CollidableUtils.intersects(p1,p2,c1,c2)) { return true;}
         }
+        // no collision detected, return true
         return false;
     }
-    private int direction(Coordinate a, Coordinate b, Coordinate c) {
-        double val = (b.getLongitude()-a.getLongitude())*(c.getLatitude()-b.getLatitude())
-                -(b.getLatitude()-a.getLatitude())*(c.getLongitude()-b.getLongitude());
-        if (val == 0) {
-           return 0;     //colinear
-        } else if (val < 0) {
-           return 2;    //anti-clockwise direction
-        }
-        return 1;    //clockwise direction
-     }
-
-     private boolean intersects(Coordinate a1, Coordinate a2, Coordinate b1, Coordinate b2) {
-        //four direction for two lines and points of other line
-        int dir1 = direction(a1, a2, b1);
-        int dir2 = direction(a1, a2, b2);
-        int dir3 = direction(b1, b2, a1);
-        int dir4 = direction(b1, b2, a2);
-        if (dir1 != dir2 && dir3 != dir4) {
-            return true;
-        }
-        return false;
-
-     }
+    
 }

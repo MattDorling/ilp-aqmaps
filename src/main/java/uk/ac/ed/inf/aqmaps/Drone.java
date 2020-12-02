@@ -30,10 +30,8 @@ public class Drone {
         var coords = new ArrayList<Coordinate>();
         
         // iterate through Air Quality points, getting their coordinates
-        int i = 0;
         for (AqPoint p : points) {
             coords.add(sc.getCoordinates(p.getW3W()));
-            i++;
         }
         // instantiate an object of Navigator class
         this.nav = new Navigator(coords, sc.getNoFlyZones(), start);
