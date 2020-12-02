@@ -10,7 +10,6 @@ public class FlightPathFile {
     private File file;
     
     public FlightPathFile(MyDate date) {
-        boolean bool = false;
         try {    
             this.file = new File("flightpath-" + date.toString() + ".txt");
             if (this.file.exists()) {

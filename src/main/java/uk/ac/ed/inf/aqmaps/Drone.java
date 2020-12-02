@@ -5,13 +5,25 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+
+
+///\brief An abstracted representation of the Drone.
+///Interacts with the ServerController and Navigator classes to implement the drone movement.
+
 public class Drone {
     private final Navigator nav;
-//    private final Map map;
     private LinkedList<Coordinate> route;
     private final ServerController server;
     private final MyDate date;
     
+    
+    /**
+     * @brief Constructor for the class.
+     *
+     * @param sc Takes a ServerController object
+     * @param start The given starting location of the drone
+     * @param date The given date used to interact with the server
+     */
     public Drone(ServerController sc, Coordinate start, MyDate date) {
         this.date = date;
         var points = sc.getAqData();

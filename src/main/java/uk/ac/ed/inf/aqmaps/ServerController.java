@@ -27,19 +27,7 @@ public class ServerController {
         this.address = "http://localhost:" + Integer.toString(port);
         this.date = date;
     }
-    public String getLocationDetails(String word1, String word2, String word3) {
-        String locator = "/words/" + word1 + "/" + word2 + "/" + word3 + "/details.json";
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create(address + locator))
-                .build();
-        String out = null;
-        try {
-            var response = httpClient.send(request, BodyHandlers.ofString());
-            out = response.body();
-        }catch(Exception e) {System.out.println(e);}
-        return out; 
-    }
-    
+
     public String checkStatus(){
         String locator = "/maps/" + Integer.toString(this.date.getYear())
         + "/" + String.format("%02d", this.date.getMonth()) 

@@ -34,18 +34,18 @@ public class ReadingsFile {
         this.features.add(path);
     }
 
-    public void stage(AqPoint r, Coordinate loc) {
+    public void stage(AqPoint reading, Coordinate loc) {
         var f = Feature.fromGeometry(Point.fromLngLat(loc.getLongitude(), loc.getLatitude()));
         f.properties().addProperty("marker-size", "medium");
-        f.properties().addProperty("location", r.getW3W());
+        f.properties().addProperty("location", reading.getW3W());
         String symbol;
         String rgb;
-        if (r.lowBattery()) {
+        if (reading.lowBattery()) {
             rgb = "#000000";
             symbol = "cross";
         } else {
-            rgb = getRgbString(r.getReading());
-            if (r.getReading() < 128) {
+            rgb = getRgbString(reading.getReading());
+            if (reading.getReading() < 128) {
                 symbol = "lighthouse";
             } else {
                 symbol = "danger";
