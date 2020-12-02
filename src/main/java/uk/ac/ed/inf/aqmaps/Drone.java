@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 
-
-
-///\brief An abstracted representation of the Drone.
-///Interacts with the ServerController and Navigator classes to implement the drone movement.
-
+/**
+ *This class is an abstracted representation of the Drone.
+ *It mainly interacts with instantiations of the ServerController and Navigator classes
+ *to implement the Drone's function.
+ */
 public class Drone {
     private final Navigator nav;
     private LinkedList<Coordinate> route;
@@ -18,11 +18,11 @@ public class Drone {
     
     
     /**
-     * @brief Constructor for the class.
+     * Constructor for the class. It also instantiates a Navigator and loads the route from it.
      *
-     * @param sc Takes a ServerController object
-     * @param start The given starting location of the drone
-     * @param date The given date used to interact with the server
+     * @param sc is the ServerController object
+     * @param start is the starting location of the drone
+     * @param date is the date on which the drone is being used
      */
     public Drone(ServerController sc, Coordinate start, MyDate date) {
         this.date = date;
@@ -41,6 +41,12 @@ public class Drone {
         this.route = nav.generateRoute();
     }
     
+    /**
+     *  This is an abstraction of the Drone's movements along the route that has been generated
+     *  by the Navigator object. It travels the route, checking for sensors after each move
+     *  using a SensorConnector. It uses FlightPathFile and ReadingsFile instantiations to
+     *  write the output files as it generates the information.
+     */
     public void travelRoute() {
         var fpFile = new FlightPathFile(date);
         var rFile = new ReadingsFile(date);
@@ -50,13 +56,16 @@ public class Drone {
         rFile.stage(this.route.toArray(new Coordinate[0]));
         
         SensorConnector sensors = new SensorConnector(this.server);
+        // iterate through all the positions in the route
         for (int i = 0; i < this.route.size() - 1; i++) {
             // scan from current position for a sensor
             AqPoint aqSensor = sensors.readSensor(this.route.get(i));
             // current position
-            Coordinate from = this.route.get(i);
+            Coordinate currentPos = this.route.get(i);
             // next position
-            Coordinate to = this.route.get(i+1);
+            Coordinate nextPos = this.route.get(i+1);
+            
+            // initialize a What3Words string - default is the word "null" if no sensor detected
             String w3w = "null";
             
             // if an Air Quality sensor is detected
@@ -68,11 +77,9 @@ public class Drone {
                     rFile.stage(aqSensor, server.getCoordinates(w3w));
                     writtenW3W.add(w3w);
                 }
-                
             }
-            
             // send info for the current move to be appended to flightpath file
-            fpFile.append(i, from, from.angleTo(to), to, w3w);
+            fpFile.append(i, currentPos, currentPos.angleTo(nextPos), nextPos, w3w);
         }
         // call to write all staged information to the readings file
         rFile.write();
