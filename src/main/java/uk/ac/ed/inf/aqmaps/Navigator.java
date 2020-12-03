@@ -51,33 +51,33 @@ public class Navigator {
      *  range of motion (i.e. 10 degree compass bearings).
      * @return the generated route as a linked list of Coordinate
      */
-    public LinkedList<Coordinate> generateRoute() {
-        // use the nearest neighbour algorithm to generate an initial route
-        var route = nnAlgorithm();
-        /** if the route is over 80 moves in length, try the algorithm 5 more times to 
-         * see if it can be improved upon. It can in most cases, because there is a randomized
-         * aspect to the pathing algorithm. 
-         */
-        if (route.size() > 80) {
-            LinkedList<Coordinate> candidate;
-            for (int i = 0; i <=5; i++) {
-                // get a candidate route
-                candidate = nnAlgorithm();
-                // if the candidate route is shorter, use that one.
-                if (candidate.size() < route.size()) {
-                    route = candidate;
-                }
-            }
-        }
-        return route;
-    }
+//    public LinkedList<Coordinate> generateRoute() {
+//        // use the nearest neighbour algorithm to generate an initial route
+//        var route = nnAlgorithm();
+//        /** if the route is over 80 moves in length, try the algorithm 5 more times to 
+//         * see if it can be improved upon. It can in most cases, because there is a randomized
+//         * aspect to the pathing algorithm. 
+//         */
+//        if (route.size() > 80) {
+//            LinkedList<Coordinate> candidate;
+//            for (int i = 0; i <=5; i++) {
+//                // get a candidate route
+//                candidate = nnAlgorithm();
+//                // if the candidate route is shorter, use that one.
+//                if (candidate.size() < route.size()) {
+//                    route = candidate;
+//                }
+//            }
+//        }
+//        return route;
+//    }
     
     /**
      * Find a route around that visits the sensors then returns to the start using a 
      * nearest-neighbour algorithm with randomized pathing between nodes
      * @return a route as a linked-list of coordinates
      */
-    private LinkedList<Coordinate> nnAlgorithm() {
+    public LinkedList<Coordinate> generateRoute() {
         // initialize a HashSet to store indices of unvisited nodes.
         var unvisited = new HashSet<Integer>();
         // initialize a LinkedList to hold the path of the drone.

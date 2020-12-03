@@ -50,6 +50,7 @@ public class SensorConnector {
             if (this.aqTargets.get(i).isHit(pos)) {
                 // if so, get the AqPoint of that position
                 p = aqPoints.get(i);
+                break;
             }
         }
         // return the AqPoint if near enough to a sensor, or null if not.
