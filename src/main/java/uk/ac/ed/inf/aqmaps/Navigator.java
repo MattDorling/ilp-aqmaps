@@ -3,6 +3,7 @@ package uk.ac.ed.inf.aqmaps;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Stack;
 
 /**
@@ -14,6 +15,7 @@ public class Navigator {
     private final Coordinate start;
     private final List<Collidable> noFlyZones;
     private final List<Coordinate> nodes;
+    private final int seed;
 
     /**
      * Constructor for the Navigator class.
@@ -23,10 +25,11 @@ public class Navigator {
      * @param start is the Coordinate location of the Drone's starting point.
      */
     public Navigator(List<Coordinate> coordinates, 
-            List<Collidable> noFlyZones, Coordinate start) {
+            List<Collidable> noFlyZones, Coordinate start, int seed) {
         this.start = start;
         this.nodes = coordinates;
         this.noFlyZones = noFlyZones;
+        this.seed = seed;
         
         // adding to the noFlyZones list the Boundary Collidables that together 
         // represent the edges of the confinement area
@@ -188,7 +191,7 @@ public class Navigator {
      * @return the path to the target node from the given start node.
      */
     private LinkedList<Coordinate> randomlyPath(Coordinate start, Target tar) {
-
+        var randGen = new Random(this.seed);
         // declare angle variables
         int ang;
         int prevAng;
@@ -218,7 +221,8 @@ public class Navigator {
                 prevAng = (int) (Math.round(path.getLast().angleTo(tar)/10.0)*10);
                 do {
                     // generate a random offset angle 
-                    ranAng = (int) Math.round((Math.random() - 0.5) * 2)*10;
+//                    ranAng = (int) Math.round((Math.random() - 0.5) * 2)*10;
+                    ranAng = (int) Math.round((randGen.nextDouble() - 0.5) * 2)*10;
                     // find the angle to the target and add the offset angle.
                     ang = (int) Math.round(path.getLast().angleTo(tar)/10.0)*10 + ranAng;
                     // check if the angle is colliding with a no-fly zone 

@@ -24,7 +24,7 @@ public class Drone {
      * @param start is the starting location of the drone
      * @param date is the date on which the drone is being used
      */
-    public Drone(ServerController sc, Coordinate start, MyDate date) {
+    public Drone(ServerController sc, Coordinate start, MyDate date, int seed) {
         this.date = date;
         var points = sc.getAqData();
         var coords = new ArrayList<Coordinate>();
@@ -34,7 +34,7 @@ public class Drone {
             coords.add(sc.getCoordinates(p.getW3W()));
         }
         // instantiate an object of Navigator class
-        this.nav = new Navigator(coords, sc.getNoFlyZones(), start);
+        this.nav = new Navigator(coords, sc.getNoFlyZones(), start, seed);
         this.server = sc;
         
         // generate a route from the Navigator

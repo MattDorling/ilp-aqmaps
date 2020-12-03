@@ -27,7 +27,7 @@ public class App
         // check if the connection to the server is ok
         if (sc.checkConnected()) {
             // instantiate a Drone and tell it to travel the route
-            Drone d = new Drone(sc, start, date);
+            Drone d = new Drone(sc, start, date, seed);
             d.travelRoute();
             System.out.println("Complete");
         }        
