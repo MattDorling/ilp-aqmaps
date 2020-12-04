@@ -1,7 +1,6 @@
 package uk.ac.ed.inf.aqmaps;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 /**
