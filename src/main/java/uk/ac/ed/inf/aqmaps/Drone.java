@@ -1,49 +1,85 @@
-
 package uk.ac.ed.inf.aqmaps;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+/**
+ *This class is an abstracted representation of the Drone.
+ *It mainly interacts with instantiations of the ServerController and Navigator classes
+ *to implement the Drone's function.
+ */
 public class Drone {
     private final Navigator nav;
-//    private final Map map;
     private LinkedList<Coordinate> route;
     private final ServerController server;
     private final MyDate date;
     
-    public Drone(ServerController sc, Coordinate start, MyDate date) {
+    
+    /**
+     * Constructor for the class. It also instantiates a Navigator and loads the route from it.
+     *
+     * @param sc is the ServerController object
+     * @param start is the starting location of the drone
+     * @param date is the date on which the drone is being used
+     * @param seed is the seed that will be used in randomized algorithm
+     */
+    public Drone(ServerController sc, Coordinate start, MyDate date, long seed) {
         this.date = date;
         var points = sc.getAqData();
-        var coords = new ArrayList<Coordinate>();
-        int i = 0;
+        var targets = new ArrayList<Target>();
+        
+        // iterate through Air Quality points, getting their coordinates
         for (AqPoint p : points) {
-            coords.add(sc.getCoordinates(p.getW3W()));
-            i++;
+            targets.add(new Target(sc.getCoordinates(p.getW3W())));
         }
-        this.nav = new Navigator(coords, points, sc.getNoFlyZones(), start);
+        // instantiate an object of Navigator class
+        this.nav = new Navigator(targets, sc.getNoFlyZones(), start, seed);
         this.server = sc;
-        this.route = nav.nnAlgorithm();
-        if (this.route.size() > 150) {
-            this.route = nav.nnAlgorithm();
-        }
+        
+        // generate a route from the Navigator
+        this.route = nav.generateRoute();
     }
     
+    /**
+     *  This is an abstraction of the Drone's movements along the route that has been generated
+     *  by the Navigator object. It travels the route, checking for sensors after each move
+     *  using a SensorConnector. It uses FlightPathFile and ReadingsFile instantiations to
+     *  write the output files as it generates the information.
+     */
     public void travelRoute() {
         var fpFile = new FlightPathFile(date);
         var rFile = new ReadingsFile(date);
+        
+        // stage the route flightpath to be written to geojson file (as a LineString)
         rFile.stage(this.route.toArray(new Coordinate[0]));
+        
         SensorConnector sensors = new SensorConnector(this.server);
-        for (int i = 0; i < this.route.size() - 1; i++) {
-            AqPoint aqSensor = sensors.readSensor(this.route.get(i));
-            Coordinate from = this.route.get(i);
-            Coordinate to = this.route.get(i+1);
+        // iterate through all the positions in the route
+        int moves = this.route.size();
+        // limit route to 150 moves
+        if (moves > 149) { moves = 149; }
+        for (int i = 0; i < moves - 1; i++) {
+
+            // previous position
+            Coordinate previousPos = this.route.get(i);
+            // current position
+            Coordinate currentPos = this.route.get(i+1);
+            // scan from current position for a sensor
+            AqPoint aqSensor = sensors.readSensor(currentPos);
+            
+            // initialize a What3Words string - default is the word "null" if no sensor detected
             String w3w = "null";
+            
+            // if an Air Quality sensor is detected
             if (aqSensor != null) {
                 rFile.stage(aqSensor, server.getCoordinates(aqSensor.getW3W()));
                 w3w = aqSensor.getW3W();
             }
-            fpFile.append(i, from, from.angleTo(to), to, w3w);
+            
+            // send info for the current move to be appended to flightpath file
+            fpFile.append(i, previousPos, previousPos.angleTo(currentPos), currentPos, w3w);
         }
+        // call to write all staged information to the readings file
         rFile.write();
     }
 }
