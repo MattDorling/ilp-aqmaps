@@ -54,6 +54,9 @@ public class Coordinate {
         return new Coordinate(newy, newx);
     }
     
+
+    
+    
     /**
      * Getter for the latitude.
      * @return the latitude.

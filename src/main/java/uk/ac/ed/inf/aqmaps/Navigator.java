@@ -14,20 +14,20 @@ public class Navigator {
     private static final double MOVE_SIZE = 0.0003;
     private final Coordinate start;
     private final List<Collidable> noFlyZones;
-    private final List<Coordinate> nodes;
-    private final int seed;
+    private final List<Target> nodes;
+    private final long seed;
 
     /**
      * Constructor for the Navigator class.
-     * @param coordinates is the list of coordinates of the sensors that the drone should visit.
+     * @param targets is the list of coordinates of the sensors that the drone should visit.
      * @param noFlyZones is the list of Buildings that the that the drone
      * should avoid colliding with.
      * @param start is the Coordinate location of the Drone's starting point.
      */
-    public Navigator(List<Coordinate> coordinates, 
-            List<Collidable> noFlyZones, Coordinate start, int seed) {
+    public Navigator(List<Target> targets, 
+            List<Collidable> noFlyZones, Coordinate start, long seed) {
         this.start = start;
-        this.nodes = coordinates;
+        this.nodes = targets;
         this.noFlyZones = noFlyZones;
         this.seed = seed;
         
@@ -99,7 +99,6 @@ public class Navigator {
         path.add(this.start);
         int targetIndex;
         do {
-//            System.out.println("--");
             // get the index of the next unvisited sensor node.
             targetIndex = nearestNode(unvisited, dronePos);
             
@@ -107,21 +106,23 @@ public class Navigator {
             targetNode = nodes.get(targetIndex);
 
             var failedVisits = new Stack<Integer>();
+            
+            
             do {
             // find a path from the drone's current position to the next sensor (near it)
             pathToAppend = randomlyPath(dronePos, new Target(targetNode));
                 // on a rare occasion, the random pathing gets stuck navigating to the nearest node
-                if (pathToAppend.isEmpty()) {
-                    var tempUnvisited = new HashSet<Integer>(unvisited);
-                    tempUnvisited.remove(targetIndex);
-                    failedVisits.push(targetIndex);
-                    targetIndex = nearestNode(tempUnvisited, dronePos);
+                if (pathToAppend.isEmpty() && unvisited.size() > 1) {
+                    failedVisits.add(targetIndex);
+                    System.out.println("here: " + unvisited.size());
+                    unvisited.remove(targetIndex);
+                    targetIndex = nearestNode(unvisited, dronePos);
                     targetNode = nodes.get(targetIndex);
-                    pathToAppend = randomlyPath(dronePos, new Target(targetNode));
-//                    var nextNearestIndex = nearestNode(ne)
+                } else if (pathToAppend.isEmpty() && unvisited.size() == 1) {
+                    unvisited.clear();
+                    failedVisits.clear();
                 }
             } while (pathToAppend.isEmpty());
-            
             if (!failedVisits.isEmpty()) {
                 Integer popped = failedVisits.pop();
                 do {
@@ -200,57 +201,73 @@ public class Navigator {
         boolean hitTar = false;
         boolean backStep = false;
         boolean trapped = false;
+        boolean hitMoreThanOneTar = false;
         int attemptCounter = 0;
-        // initialize the path
-        var path = new LinkedList<Coordinate>();
+        // declare the path
+        LinkedList<Coordinate> path;
         Coordinate c;
-        // if the starting point is already at the target, no need to path anywhere.
-//        if (tar.isHit(start)) {
-//            // add the starting point to the path.
-//            path.add(start);
-//        } else {
-            do {
-                // reset the path
-                path = new LinkedList<>();
-                attemptCounter += 1;
-                if (attemptCounter > 100) { return path; }
+        do {
+            // reset the path
+            path = new LinkedList<>();
+            
+            // emergency infinite loop preventer
+            attemptCounter += 1;
+            if (attemptCounter > 200) { return path; }
+            
+            path.add(start);
 
-                path.add(start);
-                
-                // get the angle from the start position to the target.
-                prevAng = (int) (Math.round(path.getLast().angleTo(tar)/10.0)*10);
-                do {
-                    // generate a random offset angle 
-//                    ranAng = (int) Math.round((Math.random() - 0.5) * 2)*10;
-                    ranAng = (int) Math.round((randGen.nextDouble() - 0.5) * 2)*10;
-                    // find the angle to the target and add the offset angle.
-                    ang = (int) Math.round(path.getLast().angleTo(tar)/10.0)*10 + ranAng;
-                    // check if the angle is colliding with a no-fly zone 
-                    // and if so, adjust it to avoid.
-                    ang = nonCollidingAngle(path.getLast(), ang);
-                    
-                    // check if the angle is going back on itself, which indicates a problem
-                    // such as the moves are repeatedly overstepping the target.
-                    backStep = checkBackStep(ang,prevAng);
-                    // using the generated angle, get the next point on the path and add it.
-                    c = path.getLast().findFrom(ang, MOVE_SIZE);
-                    // in the rare (maybe impossible) case where a non-colliding angle cannot be  
-                    //  found, this can exit the loop to try again:
-                    if (collides(path.getLast(), c)) { trapped = true; }
-                    path.add(c);
-                    prevAng = ang;
-                    hitTar = tar.isHit(c);
-                    
-                    // if the target is hit and there is no backstepping, exit both loops
-                    // also check that the path has not become too long, preventing infinite loops.
-                } while (!hitTar && !backStep && !trapped && path.size() <= 150);
-                // can exit the loop if a route has been found to the target without backstepping.
-                // if the target has not been found or there has been a backstep or the path
-                // is far too long, try again.
-            } while (!hitTar || backStep || trapped || path.size() >= 150);
-//        }
+            // get the angle from the start position to the target.
+            prevAng = (int) (Math.round(path.getLast().angleTo(tar)/10.0)*10);
+            do {
+                // default range of random angles is +/- 30 degrees from angle to target.
+                int angleRange = 3;
+                // if the position is close to the target, give it +/- 90 degrees range
+                if (path.getLast().getDist(tar) < MOVE_SIZE * 2) { angleRange = 9;} 
+                // generate a random offset angle 
+                ranAng = (randGen.nextInt(angleRange*2) - angleRange) * 10;
+                // find the angle to the target and add the offset angle.
+                ang = (int) Math.round(path.getLast().angleTo(tar)/10.0)*10 + ranAng;
+                // check if the angle is colliding with a no-fly zone 
+                // and if so, adjust it to avoid.
+                ang = nonCollidingAngle(path.getLast(), ang);
+
+                // using the generated angle, get the next point on the path and add it.
+                c = path.getLast().findFrom(ang, MOVE_SIZE);
+                path.add(c);
+
+
+                // in the rare (maybe impossible) case where a non-colliding angle cannot be  
+                //  found, this can exit the loop to try again:
+                if (collides(path.getLast(), c)) { trapped = true; }
+                // check if the angle is going back on itself, which indicates a problem
+                // such as the moves are repeatedly overstepping the target.
+                backStep = checkBackStep(ang,prevAng);
+                prevAng = ang;
+                // check if the current coordinate hits the target
+                hitTar = tar.isHit(c);
+                // check if the current coordinate hits the target and at least one other
+                hitMoreThanOneTar = hitTar && checkHittingOtherTargets(c,tar);
+
+                // if the target is hit and there is no backstepping, exit both loops
+                // also check that the path has not become too long, preventing infinite loops.
+            } while (!hitTar && !backStep && !trapped && path.size() <= 150);
+            // can exit the loop if a route has been found to the target without backstepping.
+            // if the target has not been found or there has been a backstep or the path
+            // is far too long, try again.
+        } while (!hitTar || hitMoreThanOneTar || backStep || trapped || path.size() >= 150);
+        //        }
         // return the path to the target.
         return path;
+    }
+    
+    private boolean checkHittingOtherTargets(Coordinate point, Target tar) {
+        var nodesToCheck = this.nodes;
+        for (Target node : nodesToCheck) {
+            if (!node.equals(tar) && node.isHit(point)){
+                return true;
+            }
+        }
+        return false;
     }
     
     /**
@@ -284,7 +301,6 @@ public class Navigator {
                 outAng = testAngPos;
                 break;
             } else {
-//                angle -= i*20;
                 // subtract i as a bias from the angle.
                 int testAngNeg = angle - i;
                 // test if the angle with bias avoids collision.
@@ -298,22 +314,6 @@ public class Navigator {
         // return the non colliding angle.
         return outAng;
     }
-//    private int nonCollidingAngle(Coordinate from, int angle) {
-//        for (int i = 0; i < 36; i++) {
-//            angle += i*10;
-//            var testCoordinate = from.findFrom(angle, MOVE_SIZE);
-//            if (!collides(from, testCoordinate)) {
-//                break;
-//            } else {
-//                angle -= i*20;
-//                testCoordinate = from.findFrom(angle, MOVE_SIZE);
-//                if (!collides(from, testCoordinate)) {
-//                    break;
-//                }
-//            }
-//        }
-//        return angle;
-//    }
     
     /**
      * Checks if a move from one Coordinate to another will collide with any noflyzones.

@@ -18,7 +18,7 @@ public class App
         double startLon = Double.parseDouble(args[4]);
         Coordinate start = new Coordinate(startLat, startLon);
         
-        int seed = Integer.parseInt(args[5]);
+        long seed = Long.parseLong(args[5]);
         int port = Integer.parseInt(args[6]);
         
         // instantiate a ServerController for the given date and port

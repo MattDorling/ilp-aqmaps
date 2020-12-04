@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,6 +20,7 @@ import com.mapbox.geojson.*;
 public class ReadingsFile {
     private File file;
     private final List<Feature> features = new LinkedList<>();
+    private final HashSet<String> writtenW3W = new HashSet<>();
     
     /**
      * Constructor for the ReadingsFile class. Checks if the file already exists.
@@ -73,36 +75,39 @@ public class ReadingsFile {
      * @param loc is the location of the sensor from which the reading was taken.
      */
     public void stage(AqPoint reading, Coordinate loc) {
-        // create a Point feature for the sensor reading at the given location
-        var f = Feature.fromGeometry(Point.fromLngLat(loc.getLongitude(), loc.getLatitude()));
-        
-        // adding the properties to the Point feature:
-        f.properties().addProperty("marker-size", "medium");
-        f.properties().addProperty("location", reading.getW3W());
-        String symbol;
-        String rgb;
-        
-        // if the reading had low battery, get the correct rgb and symbol properties
-        if (reading.lowBattery()) {
-            rgb = "#000000";
-            symbol = "cross";
-        } else {
-            // choose the rgb string
-            rgb = getRgbString(reading.getReading());
-            
-            // choose the symbol
-            if (reading.getReading() < 128) {
-                symbol = "lighthouse";
+        if (!writtenW3W.contains(reading.getW3W())) {
+            // create a Point feature for the sensor reading at the given location
+            var f = Feature.fromGeometry(Point.fromLngLat(loc.getLongitude(), loc.getLatitude()));
+
+            // adding the properties to the Point feature:
+            f.properties().addProperty("marker-size", "medium");
+            f.properties().addProperty("location", reading.getW3W());
+            String symbol;
+            String rgb;
+
+            // if the reading had low battery, get the correct rgb and symbol properties
+            if (reading.lowBattery()) {
+                rgb = "#000000";
+                symbol = "cross";
             } else {
-                symbol = "danger";
+                // choose the rgb string
+                rgb = getRgbString(reading.getReading());
+
+                // choose the symbol
+                if (reading.getReading() < 128) {
+                    symbol = "lighthouse";
+                } else {
+                    symbol = "danger";
+                }
             }
+            f.properties().addProperty("rgb-string", rgb);
+            f.properties().addProperty("marker-color", rgb);
+            f.properties().addProperty("marker-symbol", symbol);
+
+            // add the Point to the list of Features
+            features.add(f);
+            writtenW3W.add(reading.getW3W());
         }
-        f.properties().addProperty("rgb-string", rgb);
-        f.properties().addProperty("marker-color", rgb);
-        f.properties().addProperty("marker-symbol", symbol);
-        
-        // add the Point to the list of Features
-        features.add(f);
     }
     
     /**

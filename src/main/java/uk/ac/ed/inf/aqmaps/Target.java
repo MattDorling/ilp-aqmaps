@@ -1,5 +1,7 @@
 package uk.ac.ed.inf.aqmaps;
 
+import java.util.Objects;
+
 /**
  * This class extends Coordinate, adding a radius.
  * These are used to represent the sensor points while generating a route.
@@ -25,4 +27,22 @@ public class Target extends Coordinate{
     public boolean isHit(Coordinate point) {
         return point.getDist(this) < RADIUS;
     }
+    
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {return true;}
+        if (!(o instanceof Target)) {
+            return false;
+        }
+        Target target = (Target) o;
+        return this.getLatitude() == target.getLatitude() &&
+                this.getLongitude() == target.getLongitude();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getLatitude(), this.getLongitude());
+    }
+    
 }
