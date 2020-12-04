@@ -55,19 +55,4 @@ public class SensorConnector {
         // return the AqPoint if near enough to a sensor, or null if not.
         return p;
     }
-    
-    public AqPoint readSensor(Coordinate pos, HashSet<String> visitedW3W) {
-        AqPoint p = null;
-        // iterate through the targets
-        for (int i = 0; i < this.aqTargets.size(); i++) {
-            var testPoint = aqPoints.get(i);
-            // check if the position is close enough to an air quality sensor.
-            if (this.aqTargets.get(i).isHit(pos) && !visitedW3W.contains(testPoint.getW3W())) {
-                // if so, get the AqPoint of that position
-                p = testPoint;
-            }
-        }
-        // return the AqPoint if near enough to a sensor, or null if not.
-        return p;
-    }
 }

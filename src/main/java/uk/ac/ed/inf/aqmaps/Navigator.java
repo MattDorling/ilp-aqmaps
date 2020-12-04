@@ -23,6 +23,7 @@ public class Navigator {
      * @param noFlyZones is the list of Buildings that the that the drone
      * should avoid colliding with.
      * @param start is the Coordinate location of the Drone's starting point.
+     * @param seed is the seed that will be used for the randomized pathing.
      */
     public Navigator(List<Target> targets, 
             List<Collidable> noFlyZones, Coordinate start, long seed) {
@@ -44,37 +45,11 @@ public class Navigator {
         }
     
     /**
-     *  This method takes a nearest-neighbour algorithm to generate potential routes for the drone
-     *  to travel between all of the sensors. A randomized-pathing algorithm is used to generate
-     *  moves between the points decided by the nearest-neighbour algorithm, while meeting the
+     *  Find a route using a nearest-neighbour algorithm decide the order in which to visit sensors.
+     *  A randomized-pathing algorithm is used to generate moves between the points decided by 
+     *  the nearest-neighbour algorithm, while meeting the
      *  constraints such as not hitting buildings, the confinement area, and the limited
      *  range of motion (i.e. 10 degree compass bearings).
-     * @return the generated route as a linked list of Coordinate
-     */
-//    public LinkedList<Coordinate> generateRoute() {
-//        // use the nearest neighbour algorithm to generate an initial route
-//        var route = nnAlgorithm();
-//        /** if the route is over 80 moves in length, try the algorithm 5 more times to 
-//         * see if it can be improved upon. It can in most cases, because there is a randomized
-//         * aspect to the pathing algorithm. 
-//         */
-//        if (route.size() > 80) {
-//            LinkedList<Coordinate> candidate;
-//            for (int i = 0; i <=5; i++) {
-//                // get a candidate route
-//                candidate = nnAlgorithm();
-//                // if the candidate route is shorter, use that one.
-//                if (candidate.size() < route.size()) {
-//                    route = candidate;
-//                }
-//            }
-//        }
-//        return route;
-//    }
-    
-    /**
-     * Find a route around that visits the sensors then returns to the start using a 
-     * nearest-neighbour algorithm with randomized pathing between nodes
      * @return a route as a linked-list of coordinates
      */
     public LinkedList<Coordinate> generateRoute() {
@@ -85,7 +60,7 @@ public class Navigator {
         // LinkedList to hold segments of the path that will be concatenated to the whole path.
         LinkedList<Coordinate> pathToAppend;
         
-        // fill the list of unvisited indices
+        // fill the HashSet of unvisited indices
         for (int i = 0; i < nodes.size(); i++) {
             unvisited.add(i);
         }
@@ -106,23 +81,28 @@ public class Navigator {
             targetNode = nodes.get(targetIndex);
 
             var failedVisits = new Stack<Integer>();
-            
-            
             do {
             // find a path from the drone's current position to the next sensor (near it)
             pathToAppend = randomlyPath(dronePos, new Target(targetNode));
-                // on a rare occasion, the random pathing gets stuck navigating to the nearest node
+                // on a rare occasion, the random pathing could get stuck navigating
+                // to the nearest node. when this happens, it returns an empty path.
+                // if there are other unvisited vertices available, try the next nearest node
                 if (pathToAppend.isEmpty() && unvisited.size() > 1) {
+                    // push the index that failed onto a stack
                     failedVisits.add(targetIndex);
-                    System.out.println("here: " + unvisited.size());
+                    // remove the failed index from the unvisited HashSet
                     unvisited.remove(targetIndex);
+                    // find the next nearest node
                     targetIndex = nearestNode(unvisited, dronePos);
                     targetNode = nodes.get(targetIndex);
+                // if there are no other unvisited indices, simply exit
                 } else if (pathToAppend.isEmpty() && unvisited.size() == 1) {
+                    // clear the unvisited indices and failed visits
                     unvisited.clear();
                     failedVisits.clear();
                 }
             } while (pathToAppend.isEmpty());
+            // pop the indices of the nodes that failed to try to route to them from another point.
             if (!failedVisits.isEmpty()) {
                 Integer popped = failedVisits.pop();
                 do {
@@ -203,6 +183,7 @@ public class Navigator {
         boolean trapped = false;
         boolean hitMoreThanOneTar = false;
         int attemptCounter = 0;
+        int attemptCounter2 = 0;
         // declare the path
         LinkedList<Coordinate> path;
         Coordinate c;
@@ -210,7 +191,10 @@ public class Navigator {
             // reset the path
             path = new LinkedList<>();
             
-            // emergency infinite loop preventer
+            // reset inner loop counter
+            attemptCounter2 = 0;
+            
+            // emergency infinite loop preventer (should never be needed, but just in case)
             attemptCounter += 1;
             if (attemptCounter > 200) { return path; }
             
@@ -219,6 +203,10 @@ public class Navigator {
             // get the angle from the start position to the target.
             prevAng = (int) (Math.round(path.getLast().angleTo(tar)/10.0)*10);
             do {
+                // emergency infinite loop preventer (should never be needed, but just in case)
+                attemptCounter2 += 1;
+                if (attemptCounter2 > 150) { return new LinkedList<>(); }
+                
                 // default range of random angles is +/- 30 degrees from angle to target.
                 int angleRange = 3;
                 // if the position is close to the target, give it +/- 90 degrees range
@@ -248,18 +236,23 @@ public class Navigator {
                 // check if the current coordinate hits the target and at least one other
                 hitMoreThanOneTar = hitTar && checkHittingOtherTargets(c,tar);
 
-                // if the target is hit and there is no backstepping, exit both loops
-                // also check that the path has not become too long, preventing infinite loops.
+                // if the target is hit and there is no backstepping or trapped, exit both loops
+                // also check that the path has not become far too long.
             } while (!hitTar && !backStep && !trapped && path.size() <= 150);
-            // can exit the loop if a route has been found to the target without backstepping.
-            // if the target has not been found or there has been a backstep or the path
-            // is far too long, try again.
+            // can exit the loop if a route has been found to the target without an issue.
+            // if the target has not been found acceptably, try again.
         } while (!hitTar || hitMoreThanOneTar || backStep || trapped || path.size() >= 150);
-        //        }
         // return the path to the target.
         return path;
     }
     
+    /**
+     * Check through all targets other than the passed one to see if the point
+     * is hitting any of the other target sensor nodes
+     * @param point the point to check
+     * @param tar the target that should not be checked
+     * @return true if hitting other targets, false if not
+     */
     private boolean checkHittingOtherTargets(Coordinate point, Target tar) {
         var nodesToCheck = this.nodes;
         for (Target node : nodesToCheck) {

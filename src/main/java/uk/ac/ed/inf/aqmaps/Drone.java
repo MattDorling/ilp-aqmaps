@@ -23,6 +23,7 @@ public class Drone {
      * @param sc is the ServerController object
      * @param start is the starting location of the drone
      * @param date is the date on which the drone is being used
+     * @param seed is the seed that will be used in randomized algorithm
      */
     public Drone(ServerController sc, Coordinate start, MyDate date, long seed) {
         this.date = date;
@@ -76,6 +77,7 @@ public class Drone {
                 rFile.stage(aqSensor, server.getCoordinates(aqSensor.getW3W()));
                 w3w = aqSensor.getW3W();
             }
+            
             // send info for the current move to be appended to flightpath file
             fpFile.append(i, currentPos, currentPos.angleTo(nextPos), nextPos, w3w);
         }
