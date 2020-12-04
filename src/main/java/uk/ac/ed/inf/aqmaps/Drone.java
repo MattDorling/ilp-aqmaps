@@ -51,7 +51,6 @@ public class Drone {
     public void travelRoute() {
         var fpFile = new FlightPathFile(date);
         var rFile = new ReadingsFile(date);
-        var writtenW3W = new HashSet<String>();
         
         // stage the route flightpath to be written to geojson file (as a LineString)
         rFile.stage(this.route.toArray(new Coordinate[0]));
@@ -59,15 +58,16 @@ public class Drone {
         SensorConnector sensors = new SensorConnector(this.server);
         // iterate through all the positions in the route
         int moves = this.route.size();
-//        if (moves > 149) { moves = 149; }
+        // limit route to 150 moves
+        if (moves > 149) { moves = 149; }
         for (int i = 0; i < moves - 1; i++) {
 
+            // previous position
+            Coordinate previousPos = this.route.get(i);
             // current position
-            Coordinate currentPos = this.route.get(i);
-            // next position
-            Coordinate nextPos = this.route.get(i+1);
+            Coordinate currentPos = this.route.get(i+1);
             // scan from current position for a sensor
-            AqPoint aqSensor = sensors.readSensor(nextPos);
+            AqPoint aqSensor = sensors.readSensor(currentPos);
             
             // initialize a What3Words string - default is the word "null" if no sensor detected
             String w3w = "null";
@@ -79,7 +79,7 @@ public class Drone {
             }
             
             // send info for the current move to be appended to flightpath file
-            fpFile.append(i, currentPos, currentPos.angleTo(nextPos), nextPos, w3w);
+            fpFile.append(i, previousPos, previousPos.angleTo(currentPos), currentPos, w3w);
         }
         // call to write all staged information to the readings file
         rFile.write();

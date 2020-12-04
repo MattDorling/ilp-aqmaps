@@ -81,9 +81,10 @@ public class Navigator {
             targetNode = nodes.get(targetIndex);
 
             var failedVisits = new Stack<Integer>();
+            boolean exit = false;
             do {
-            // find a path from the drone's current position to the next sensor (near it)
-            pathToAppend = randomlyPath(dronePos, new Target(targetNode));
+                // find a path from the drone's current position to the next sensor (near it)
+                pathToAppend = randomlyPath(dronePos, new Target(targetNode));
                 // on a rare occasion, the random pathing could get stuck navigating
                 // to the nearest node. when this happens, it returns an empty path.
                 // if there are other unvisited vertices available, try the next nearest node
@@ -100,8 +101,9 @@ public class Navigator {
                     // clear the unvisited indices and failed visits
                     unvisited.clear();
                     failedVisits.clear();
+                    exit = true;
                 }
-            } while (pathToAppend.isEmpty());
+            } while (pathToAppend.isEmpty() && !exit);
             // pop the indices of the nodes that failed to try to route to them from another point.
             if (!failedVisits.isEmpty()) {
                 Integer popped = failedVisits.pop();
@@ -119,13 +121,14 @@ public class Navigator {
             // append the path to the next sensor to the path.
             path.addAll(pathToAppend);
             
-            // remove the index of that target from unvisited because it is now visited.
-            unvisited.remove(targetIndex);
-            
+            if (unvisited.contains(targetIndex)){
+                // remove the index of that target from unvisited because it is now visited.
+                unvisited.remove(targetIndex);
+            }
             // update the hypothetical drone position
             dronePos = path.getLast();
+            
         } while (!unvisited.isEmpty());
-        
         
         // get a path back to the starting position.
         pathToAppend = randomlyPath(dronePos, new Target(this.start));
@@ -196,7 +199,7 @@ public class Navigator {
             
             // emergency infinite loop preventer (should never be needed, but just in case)
             attemptCounter += 1;
-            if (attemptCounter > 200) { return path; }
+            if (attemptCounter > 500) { return path; }
             
             path.add(start);
 
@@ -205,7 +208,7 @@ public class Navigator {
             do {
                 // emergency infinite loop preventer (should never be needed, but just in case)
                 attemptCounter2 += 1;
-                if (attemptCounter2 > 150) { return new LinkedList<>(); }
+                if (attemptCounter2 > 500) { return new LinkedList<>(); }
                 
                 // default range of random angles is +/- 30 degrees from angle to target.
                 int angleRange = 3;
@@ -272,7 +275,7 @@ public class Navigator {
     private static boolean checkBackStep(int ang1, int ang2) {
         if (ang1 < 0) { ang1 += 360; }
         if (ang2 < 0) { ang2 += 360; }
-        return (360 - Math.abs(ang1-ang2) > 170 && Math.abs(ang1-ang2) > 170);
+        return (360 - Math.abs(ang1-ang2) > 120 && Math.abs(ang1-ang2) > 120);
     }
     
     /**
